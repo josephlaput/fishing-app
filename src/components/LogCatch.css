@@ -1,0 +1,59 @@
+.log-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+/* FORM */
+.log-form {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.log-form input,
+.log-form textarea {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.log-form button {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #2e7d32;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* LOGBOOK */
+.logbook {
+  background: white;
+  padding: 24px;
+  border-radius: 10px;
+}
+
+.logbook h2 {
+  margin-top: 0;
+}
+
+.log-entry {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.empty {
+  color: #888;
+  font-style: italic;
+}
+
