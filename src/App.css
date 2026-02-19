@@ -5,7 +5,7 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #f4f6f8;
+  background: linear-gradient(to bottom, #E0F7FA, #01579B);
 }
 
 .App {
@@ -16,7 +16,7 @@ body {
 
 /* Header */
 header {
-  background-color: #1b5e20;
+  background-color: #053363;
   color: white;
   padding: 16px 32px;
 }
@@ -65,4 +65,3 @@ main {
   max-width: 1200px;
   margin: 0 auto;
 }
-
