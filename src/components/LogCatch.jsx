@@ -3,18 +3,28 @@ import Select from "react-select";
 import { supabase } from "../supabaseClient";
 import { fishSpeciesOptions } from "../data/FishSpecies";
 
-export default function LogCatch({ newPin }) {
+export default function LogCatch({ initialPin }) {
+  // Form fields
   const [fishSpecies, setFishSpecies] = useState(null);
   const [weight, setWeight] = useState("");
   const [length, setLength] = useState("");
   const [baitUsed, setBaitUsed] = useState("");
   const [weather, setWeather] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
+  const [latitude, setLatitude] = useState(initialPin?.lat || "");
+  const [longitude, setLongitude] = useState(initialPin?.lng || "");
   const [notes, setNotes] = useState("");
+
+  // Saved catches
   const [catches, setCatches] = useState([]);
 
-  // Load previous catches from Supabase on mount
+  // Update lat/lng if a new pin is passed in
+  useEffect(() => {
+    if (initialPin) {
+      setLatitude(initialPin.lat);
+      setLongitude(initialPin.lng);
+    }
+  }, [initialPin]);
+
   useEffect(() => {
     fetchCatches();
   }, []);
@@ -28,43 +38,32 @@ export default function LogCatch({ newPin }) {
     if (!error) setCatches(data);
   };
 
-  // Update latitude/longitude if a new pin is dropped
-  useEffect(() => {
-    if (newPin) {
-      setLatitude(newPin.lat);
-      setLongitude(newPin.lng);
-    }
-  }, [newPin]);
-
   const handleSave = async () => {
     if (!fishSpecies) {
       alert("Please select a fish species");
       return;
     }
 
-    const { data, error } = await supabase
-      .from("catches")
-      .insert([
-        {
-          fish_species: fishSpecies.value,
-          weight: weight || null,
-          length: length || null,
-          bait_used: baitUsed,
-          weather: weather,
-          location_lat: latitude || null,
-          location_lng: longitude || null,
-          notes: notes,
-        },
-      ])
-      .select();
+    const { error } = await supabase.from("catches").insert([
+      {
+        fish_species: fishSpecies.value,
+        weight: weight || null,
+        length: length || null,
+        bait_used: baitUsed,
+        weather: weather,
+        location_lat: latitude || null,
+        location_lng: longitude || null,
+        notes: notes,
+      },
+    ]);
 
     if (error) {
       console.error(error);
       alert(error.message);
     } else {
-      // Add new catch to logbook immediately
-      setCatches([data[0], ...catches]);
+      fetchCatches();
       clearForm();
+      alert("Catch saved!");
     }
   };
 
@@ -74,15 +73,15 @@ export default function LogCatch({ newPin }) {
     setLength("");
     setBaitUsed("");
     setWeather("");
-    setLatitude(newPin?.lat || "");
-    setLongitude(newPin?.lng || "");
+    setLatitude("");
+    setLongitude("");
     setNotes("");
   };
 
   return (
-    <div className="container" style={{ display: "flex", gap: "20px" }}>
+    <div className="container">
       {/* LEFT SIDE FORM */}
-      <div className="form" style={{ flex: 1 }}>
+      <div className="form">
         <h2>Log a Catch</h2>
 
         <Select
@@ -123,14 +122,14 @@ export default function LogCatch({ newPin }) {
           placeholder="Latitude"
           type="number"
           value={latitude}
-          readOnly
+          onChange={(e) => setLatitude(e.target.value)}
         />
 
         <input
           placeholder="Longitude"
           type="number"
           value={longitude}
-          readOnly
+          onChange={(e) => setLongitude(e.target.value)}
         />
 
         <textarea
@@ -139,26 +138,23 @@ export default function LogCatch({ newPin }) {
           onChange={(e) => setNotes(e.target.value)}
         />
 
-        <button onClick={handleSave} style={{ marginTop: "10px" }}>
-          Save Catch
-        </button>
+        <button onClick={handleSave}>Save Catch</button>
       </div>
 
       {/* RIGHT SIDE LOGBOOK */}
-      <div className="logbook" style={{ flex: 1, maxHeight: "500px", overflowY: "auto" }}>
+      <div className="logbook">
         <h2>Logbook</h2>
-        {catches.map((catchItem) => (
-          <div key={catchItem.id} className="log-entry" style={{ marginBottom: "10px" }}>
-            <h3>{catchItem.fish_species}</h3>
-            <p>Weight: {catchItem.weight}</p>
-            <p>Length: {catchItem.length}</p>
-            <p>Bait: {catchItem.bait_used}</p>
-            <p>Weather: {catchItem.weather}</p>
+        {catches.map((c) => (
+          <div key={c.id} className="log-entry">
+            <h3>{c.fish_species}</h3>
+            <p>Weight: {c.weight}</p>
+            <p>Length: {c.length}</p>
+            <p>Bait: {c.bait_used}</p>
+            <p>Weather: {c.weather}</p>
             <p>
-              Location: {Number(catchItem.location_lat).toFixed(5)},{" "}
-              {Number(catchItem.location_lng).toFixed(5)}
+              Location: {c.location_lat}, {c.location_lng}
             </p>
-            <p>Notes: {catchItem.notes}</p>
+            <p>Notes: {c.notes}</p>
           </div>
         ))}
       </div>

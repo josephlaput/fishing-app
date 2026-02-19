@@ -5,33 +5,39 @@ import MapView from "./components/MapView";
 import LogCatch from "./components/LogCatch";
 import Profile from "./components/Profile";
 
-function App() {
+export default function App() {
   const [activeTab, setActiveTab] = useState("map");
-  const [newPin, setNewPin] = useState(null);
 
-  // Called when a new pin is dropped
-  const handleNewPin = (pin) => {
-    setNewPin(pin);       // update the latest pin
-    setActiveTab("log");  // switch to Log Catch tab automatically
-  };
+  // Keep all pins in App state to persist
+  const [pins, setPins] = useState([]);
+  const [selectedPin, setSelectedPin] = useState(null);
 
   const renderTab = () => {
     switch (activeTab) {
       case "map":
-        return <MapView onNewPin={handleNewPin} />;
+        return (
+          <MapView
+            pins={pins}
+            setPins={setPins}
+            onNewPin={(pin) => {
+              setSelectedPin(pin);  // Pass lat/lng to LogCatch
+              setActiveTab("log");  // Switch tab
+            }}
+          />
+        );
       case "log":
-        return <LogCatch newPin={newPin} />;
+        return <LogCatch initialPin={selectedPin} />;
       case "profile":
         return <Profile />;
       default:
-        return <MapView onNewPin={handleNewPin} />;
+        return <MapView />;
     }
   };
 
   return (
     <div className="App">
       <header>
-        <h1>🎣ReelInsight</h1>
+        <h1>🎣 ReelInsight</h1>
 
         <nav className="tabs">
           <button
@@ -61,5 +67,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
