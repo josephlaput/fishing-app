@@ -3,21 +3,28 @@ import "./App.css";
 
 import MapView from "./components/MapView";
 import LogCatch from "./components/LogCatch";
-import Profile from "./components/Profile"; // 👈 placeholder for user/profile
+import Profile from "./components/Profile";
 
 function App() {
   const [activeTab, setActiveTab] = useState("map");
+  const [newPin, setNewPin] = useState(null);
+
+  // Called when a new pin is dropped
+  const handleNewPin = (pin) => {
+    setNewPin(pin);       // update the latest pin
+    setActiveTab("log");  // switch to Log Catch tab automatically
+  };
 
   const renderTab = () => {
     switch (activeTab) {
       case "map":
-        return <MapView />;
+        return <MapView onNewPin={handleNewPin} />;
       case "log":
-        return <LogCatch />;
+        return <LogCatch newPin={newPin} />;
       case "profile":
         return <Profile />;
       default:
-        return <MapView />;
+        return <MapView onNewPin={handleNewPin} />;
     }
   };
 

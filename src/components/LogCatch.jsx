@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { supabase } from "../supabaseClient";
-import { fishSpeciesOptions } from "../data/FishSpecies"; // correct path
+import { fishSpeciesOptions } from "../data/FishSpecies";
 
-export default function LogCatch() {
+export default function LogCatch({ newPin }) {
   const [fishSpecies, setFishSpecies] = useState(null);
   const [weight, setWeight] = useState("");
   const [length, setLength] = useState("");
@@ -14,6 +14,7 @@ export default function LogCatch() {
   const [notes, setNotes] = useState("");
   const [catches, setCatches] = useState([]);
 
+  // Load previous catches from Supabase on mount
   useEffect(() => {
     fetchCatches();
   }, []);
@@ -27,31 +28,42 @@ export default function LogCatch() {
     if (!error) setCatches(data);
   };
 
+  // Update latitude/longitude if a new pin is dropped
+  useEffect(() => {
+    if (newPin) {
+      setLatitude(newPin.lat);
+      setLongitude(newPin.lng);
+    }
+  }, [newPin]);
+
   const handleSave = async () => {
     if (!fishSpecies) {
       alert("Please select a fish species");
       return;
     }
 
-    const { error } = await supabase.from("catches").insert([
-      {
-        fish_species: fishSpecies.value,
-        weight: weight || null,
-        length: length || null,
-        bait_used: baitUsed,
-        weather: weather,
-        location_lat: latitude || null,
-        location_lng: longitude || null,
-        notes: notes,
-      },
-    ]);
+    const { data, error } = await supabase
+      .from("catches")
+      .insert([
+        {
+          fish_species: fishSpecies.value,
+          weight: weight || null,
+          length: length || null,
+          bait_used: baitUsed,
+          weather: weather,
+          location_lat: latitude || null,
+          location_lng: longitude || null,
+          notes: notes,
+        },
+      ])
+      .select();
 
     if (error) {
       console.error(error);
       alert(error.message);
     } else {
-      alert("Catch saved!");
-      fetchCatches();
+      // Add new catch to logbook immediately
+      setCatches([data[0], ...catches]);
       clearForm();
     }
   };
@@ -62,18 +74,17 @@ export default function LogCatch() {
     setLength("");
     setBaitUsed("");
     setWeather("");
-    setLatitude("");
-    setLongitude("");
+    setLatitude(newPin?.lat || "");
+    setLongitude(newPin?.lng || "");
     setNotes("");
   };
 
   return (
-    <div className="container">
+    <div className="container" style={{ display: "flex", gap: "20px" }}>
       {/* LEFT SIDE FORM */}
-      <div className="form">
+      <div className="form" style={{ flex: 1 }}>
         <h2>Log a Catch</h2>
 
-        {/* Fish Species Searchable Dropdown */}
         <Select
           options={fishSpeciesOptions}
           value={fishSpecies}
@@ -112,14 +123,14 @@ export default function LogCatch() {
           placeholder="Latitude"
           type="number"
           value={latitude}
-          onChange={(e) => setLatitude(e.target.value)}
+          readOnly
         />
 
         <input
           placeholder="Longitude"
           type="number"
           value={longitude}
-          onChange={(e) => setLongitude(e.target.value)}
+          readOnly
         />
 
         <textarea
@@ -128,21 +139,24 @@ export default function LogCatch() {
           onChange={(e) => setNotes(e.target.value)}
         />
 
-        <button onClick={handleSave}>Save Catch</button>
+        <button onClick={handleSave} style={{ marginTop: "10px" }}>
+          Save Catch
+        </button>
       </div>
 
       {/* RIGHT SIDE LOGBOOK */}
-      <div className="logbook">
+      <div className="logbook" style={{ flex: 1, maxHeight: "500px", overflowY: "auto" }}>
         <h2>Logbook</h2>
         {catches.map((catchItem) => (
-          <div key={catchItem.id} className="log-entry">
+          <div key={catchItem.id} className="log-entry" style={{ marginBottom: "10px" }}>
             <h3>{catchItem.fish_species}</h3>
             <p>Weight: {catchItem.weight}</p>
             <p>Length: {catchItem.length}</p>
             <p>Bait: {catchItem.bait_used}</p>
             <p>Weather: {catchItem.weather}</p>
             <p>
-              Location: {catchItem.location_lat}, {catchItem.location_lng}
+              Location: {Number(catchItem.location_lat).toFixed(5)},{" "}
+              {Number(catchItem.location_lng).toFixed(5)}
             </p>
             <p>Notes: {catchItem.notes}</p>
           </div>
